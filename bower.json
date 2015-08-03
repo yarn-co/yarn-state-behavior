@@ -14,6 +14,7 @@
     "type": "git",
     "url": "git://github.com/yarn-co/yarn-state-behavior.git"
   },
+  "main": "yarn-state-behavior.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.0.0"
   },
