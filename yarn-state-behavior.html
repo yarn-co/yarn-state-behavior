@@ -33,29 +33,21 @@ var YarnBehaviors = YarnBehaviors || {};
 
     ready: function() {
 
-      var self = this;
+      // Polyfill notifyPath to delegate to all instances.
 
-      // Polyfill set and notifyPath to delegate to all instances.
-      var methodNames = ['set', 'notifyPath'];
+      var _notifyPathOnce = this.notifyPath;
 
-      var methodName;
-      for (var i = 0; i < methodNames.length; i++) {
+      this.notifyPath = function() {
 
-        methodName = methodNames[i];
+        // Call on self
+        _notifyPathOnce.apply(this, arguments);
 
-        (function(methodName, _methodOrig) {
+        // Call on all other instances if necessary
+        if (arguments[0].split('.')[0] === 'state') {
+          this._invokeInstances(_notifyPathOnce, arguments);
+        }
+      };
 
-          self[methodName] = function() {
-
-            _methodOrig.apply(self, arguments);
-            if (arguments[0].split('.')[0] === 'state') {
-              self._invokeInstances(_methodOrig, arguments);
-            }
-          };
-
-        })(methodName, this[methodName]);
-
-      }
     },
 
     attached: function() {
