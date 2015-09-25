@@ -33,18 +33,28 @@ var YarnBehaviors = YarnBehaviors || {};
 
     ready: function() {
 
-      // Polyfill notifyPath to delegate to all instances.
+      // Protect from state behavior being mixed-in with itself
+      // see Polymer/polymer#1894
 
-      var _notifyPathOnce = this.notifyPath;
+      if (this._usingStateBehavior) {
+        return;
+      }
+
+      this._usingStateBehavior = true;
+
+
+      // Patch notifyPath to delegate to all instances
+
+      var _notifyPath = this.notifyPath;
 
       this.notifyPath = function() {
 
         // Call on self
-        _notifyPathOnce.apply(this, arguments);
+        _notifyPath.apply(this, arguments);
 
         // Call on all other instances if necessary
         if (arguments[0].split('.')[0] === 'state') {
-          this._invokeInstances(_notifyPathOnce, arguments);
+          this._invokeInstances(_notifyPath, arguments);
         }
       };
 
@@ -52,7 +62,10 @@ var YarnBehaviors = YarnBehaviors || {};
 
     attached: function() {
 
-      internals.instances.push(this);
+      // Protect from state behavior being mixed-in with itself
+      if (!~internals.instances.indexOf(this)) {
+        internals.instances.push(this);
+      }
     },
 
     detached: function() {
