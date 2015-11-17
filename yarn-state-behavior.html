@@ -44,14 +44,14 @@ var YarnBehaviors = YarnBehaviors || {};
 
 
       // Patch notifyPath to delegate to all instances
-
-      var _notifyPath = this.notifyPath;
-
-      this.notifyPath = function() {
-
+      
+      var _notifyPath = this._notifyPath;
+      
+      this._notifyPath = function() {
+        
         // Call on self
         _notifyPath.apply(this, arguments);
-
+        
         // Call on all other instances if necessary
         if (arguments[0].split('.')[0] === 'state') {
           this._invokeInstances(_notifyPath, arguments);
@@ -66,6 +66,7 @@ var YarnBehaviors = YarnBehaviors || {};
       if (!~internals.instances.indexOf(this)) {
         internals.instances.push(this);
       }
+      
     },
 
     detached: function() {
