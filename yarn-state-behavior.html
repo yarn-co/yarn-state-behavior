@@ -11,7 +11,7 @@ var YarnBehaviors = YarnBehaviors || {};
   };
 
   /**
-  This behavior should be used to share app state across elements via the `state` property.  The behavior ensures that `set` and `notifyPath` calls involving the `state` object or its children are delegated to all elements with this behavior, so observers should work as expected.
+  This behavior should be used to share app state across elements via the `state` property.  The behavior ensures that path-notifying calls (e.g. `set()`, `splice()`, etc.) involving the `state` object or its children are delegated to all elements with this behavior, so observers should work as expected.
 
   @polymerBehavior YarnBehaviors.StateBehavior
   */
@@ -43,18 +43,24 @@ var YarnBehaviors = YarnBehaviors || {};
       this._usingStateBehavior = true;
 
 
-      // Patch notifyPath to delegate to all instances
+      // Patch _notifyPath to delegate to all instances.
+      // This is slightly dirty, but by far most efficient
+      // code-wise and perf-wise.
 
-      var _notifyPath = this.notifyPath;
+      if (typeof this._notifyPath !== 'function') {
+        throw new Error('Polymer version appears to be incompatible with StateBehavior.');
+      }
 
-      this.notifyPath = function() {
+      var origNotifyPath = this._notifyPath;
+
+      this._notifyPath = function() {
 
         // Call on self
-        _notifyPath.apply(this, arguments);
+        origNotifyPath.apply(this, arguments);
 
         // Call on all other instances if necessary
         if (arguments[0].split('.')[0] === 'state') {
-          this._invokeInstances(_notifyPath, arguments);
+          this._invokeInstances(origNotifyPath, arguments);
         }
       };
 
@@ -70,8 +76,8 @@ var YarnBehaviors = YarnBehaviors || {};
 
     detached: function() {
 
-      var i;
-      i = internals.instances.indexOf(this);
+      var i = internals.instances.indexOf(this);
+
       if (i >= 0) {
         internals.instances.splice(i, 1);
       }
