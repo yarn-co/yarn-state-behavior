@@ -69,6 +69,30 @@
             done();
           });
 
+          test('other elements can observe specific array elements.', function(done) {
+
+            from.set('state.arr', ['init']);
+            from.set('state.arr.#0', 'arr-specific');
+
+            assert.equal(to.state.arr[0], 'arr-specific');
+            assert.equal(to.seenState, 'arr-specific');
+            done();
+          });
+
+          test('other elements can observe array splices.', function(done) {
+
+            from.set('state.arr', []);
+            from.push('state.arr', 'arr-splice');
+
+            assert.equal(to.state.arr[0], 'arr-splice');
+            assert.equal(typeof to.seenStateSplices, 'object');
+            assert.equal((to.seenStateSplices.indexSplices || []).length, 1);
+            assert.equal(to.seenStateSplices.indexSplices[0].index, 0);
+            assert.equal(to.seenStateSplices.indexSplices[0].addedCount, 1);
+            assert.equal(to.seenStateSplices.indexSplices[0].removed.length, 0);
+            done();
+          });
+
           test('the shared object reference is read-only.', function(done) {
 
             assert.throw(function() {
